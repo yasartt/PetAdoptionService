@@ -41,6 +41,21 @@ namespace pet_adoption_service.Services
             
         }
 
+        public async Task<Shelter?> GetShelterByPetIdAsync(int petId)
+        {
+            var stay = await _dbContext.Stays.Include(q => q.Shelter).
+                SingleOrDefaultAsync(q => q.PetId == petId && q.is_Current == true);
+
+            if (stay != null)
+            {
+                return null;
+            }
+
+            var shelter = stay.Shelter;
+            
+            return shelter;
+        }
+
         public async Task<Pet> GetPetByIdAsync(int petId)
         {
             return await _dbContext.Pets.SingleOrDefaultAsync(q => q.PetId == petId);

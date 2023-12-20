@@ -49,5 +49,14 @@ namespace pet_adoption_service.Controllers
 
             return Ok(thePet);
         }
+
+        [HttpGet("{petId}")]
+        [ProducesResponseType(typeof(Shelter), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<Shelter>>? GetShelterByPetId(int petId)
+        {
+            var resultingShelter = await _petService.GetShelterByPetIdAsync(petId);
+
+            return Ok(resultingShelter);
+        }
     }
 }
