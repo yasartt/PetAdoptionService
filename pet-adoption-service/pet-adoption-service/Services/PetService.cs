@@ -68,9 +68,15 @@ namespace pet_adoption_service.Services
             return await _dbContext.Pets.SingleOrDefaultAsync(q => q.PetId == petId);
         }
 
-        public async Task<List<Pet>?> FilterPetsAsync(int minAge, int maxAge, string gender, string breed)
+        public async Task<List<Pet>?> FilterPetsAsync(int? minAge, int? maxAge, string? gender, string? breed)
         {
-            var filteredList = await _dbContext.Pets.Where(q => q.Age > minAge && q.Age < maxAge && q.Gender == gender && q.Breed == breed).ToListAsync();
+            var filteredList = await _dbContext.Pets.Where(q => 
+            (!minAge.HasValue || q.Age >= minAge) 
+            && (!maxAge.HasValue || q.Age <= maxAge)
+            && (gender == null || q.Gender == gender) 
+            && (breed == null || q.Breed == breed)
+            ).ToListAsync();
+
             return filteredList;
         }
     }

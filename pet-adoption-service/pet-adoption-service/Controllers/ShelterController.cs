@@ -39,7 +39,7 @@ namespace pet_adoption_service.Controllers
             return await shelterService.AddAppointmentAsync(vetId, petAdopterId, date);
         }
 
-        [HttpGet("shelterId")]
+        [HttpGet("{shelterId}")]
         [ProducesResponseType(typeof(List<Pet>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<List<Pet>>> GetPetsOfShelter(int shelterId)
         {

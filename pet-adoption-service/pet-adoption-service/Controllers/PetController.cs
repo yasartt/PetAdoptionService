@@ -69,9 +69,14 @@ namespace pet_adoption_service.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(List<HealthRecord>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(List<Pet>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<List<Pet>?>> FilterPets(PetFilterDTO filterParams)
         {
+            if(filterParams == null)
+            {
+                return null;
+            }
+
             var minAge = filterParams.minAge;
             var maxAge = filterParams.maxAge;
             var gender = filterParams.sex;
