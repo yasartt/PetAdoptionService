@@ -46,7 +46,7 @@ namespace pet_adoption_service.Services
             var stay = await _dbContext.Stays.Include(q => q.Shelter).
                 SingleOrDefaultAsync(q => q.PetId == petId && q.is_Current == true);
 
-            if (stay != null)
+            if (stay == null)
             {
                 return null;
             }
@@ -54,6 +54,13 @@ namespace pet_adoption_service.Services
             var shelter = stay.Shelter;
             
             return shelter;
+        }
+
+        public async Task<List<HealthRecord>?> GetHealthRecordOfPetAsync(int petId)
+        {
+            var healthRecords = await _dbContext.HealthRecords.Where(q => q.PetId == petId).ToListAsync();
+
+            return healthRecords;
         }
 
         public async Task<Pet> GetPetByIdAsync(int petId)
