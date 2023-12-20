@@ -23,7 +23,7 @@ namespace pet_adoption_service.Models
         public int VetId { get; set; }
 
         [Required]
-        public bool isHealthy { get; set; }
+        public bool is_healthy { get; set; }
 
         [Required]
         public DateTime health_record_date { get; set; }
