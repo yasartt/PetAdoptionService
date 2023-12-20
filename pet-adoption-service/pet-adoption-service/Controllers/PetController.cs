@@ -67,5 +67,12 @@ namespace pet_adoption_service.Controllers
 
             return Ok(healthRecords);
         }
+
+        /**[HttpGet("{params}")]
+        [ProducesResponseType(typeof(List<HealthRecord>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<List<Pet>?>> FilterPets(petFilterDTO)
+        {
+
+        }*/
     }
 }

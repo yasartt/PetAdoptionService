@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace pet_adoption_service.Models
 {
+    [Table("health_record")]
     public class HealthRecord
     {
         [Key]
