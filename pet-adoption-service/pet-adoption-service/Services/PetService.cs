@@ -22,7 +22,7 @@ namespace pet_adoption_service.Services
 
         public async Task<List<Pet>> GetAllPets()
         {
-            return await _dbContext.Pets.ToListAsync();
+            return await _dbContext.Pets.Where(q => q.IsAvailable == 1).ToListAsync();
         }
 
         public async Task<bool> AddPet(Pet pet)
@@ -66,6 +66,12 @@ namespace pet_adoption_service.Services
         public async Task<Pet> GetPetByIdAsync(int petId)
         {
             return await _dbContext.Pets.SingleOrDefaultAsync(q => q.PetId == petId);
+        }
+
+        public async Task<List<Pet>?> FilterPetsAsync(int minAge, int maxAge, string gender, string breed)
+        {
+            var filteredList = await _dbContext.Pets.Where(q => q.Age > minAge && q.Age < maxAge && q.Gender == gender && q.Breed == breed).ToListAsync();
+            return filteredList;
         }
     }
 }

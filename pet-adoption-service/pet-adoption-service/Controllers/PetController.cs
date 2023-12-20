@@ -68,11 +68,16 @@ namespace pet_adoption_service.Controllers
             return Ok(healthRecords);
         }
 
-        /**[HttpGet("{params}")]
+        [HttpGet("{filterParams}")]
         [ProducesResponseType(typeof(List<HealthRecord>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<List<Pet>?>> FilterPets(petFilterDTO)
+        public async Task<ActionResult<List<Pet>?>> FilterPets(PetFilterDTO filterParams)
         {
+            var minAge = filterParams.minAge;
+            var maxAge = filterParams.maxAge;
+            var gender = filterParams.sex;
+            var breed = filterParams.breed;
 
-        }*/
+            return await _petService.FilterPetsAsync( minAge,  maxAge,  gender, breed);
+        }
     }
 }
