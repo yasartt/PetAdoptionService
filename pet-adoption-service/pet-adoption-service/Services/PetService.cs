@@ -40,5 +40,10 @@ namespace pet_adoption_service.Services
             }
             
         }
+
+        public async Task<Pet> GetPetByIdAsync(int petId)
+        {
+            return await _dbContext.Pets.SingleOrDefaultAsync(q => q.PetId == petId);
+        }
     }
 }
