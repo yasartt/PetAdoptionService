@@ -30,6 +30,38 @@ namespace pet_adoption_service.Services
             return newAdopter;
         }
 
+        public async Task<long> ApplyForPetAsync(int petAdopterId, int petId)
+        {
+            var petShelter = await _dbContext.Stays.SingleOrDefaultAsync(q => q.PetId == petId);
+            var thePet = await _dbContext.Pets.SingleOrDefaultAsync(q => q.PetId == petId);
+            var theAdopter = await _dbContext.PetAdopters.SingleOrDefaultAsync(q => q.UserId == petAdopterId);
+            var buAdopterBasvuruYaptiMi = await _dbContext.AdoptionApplications.SingleOrDefaultAsync(q => q.PetAdopterId == petAdopterId && q.PetId == petId);
+
+            if (thePet == null || petShelter == null || theAdopter == null)
+            {
+                return -3;
+            }
+            else if(thePet.IsAvailable == 0)
+            {
+                return -1;
+            }
+            else if (buAdopterBasvuruYaptiMi != null)
+            {
+                return -2;
+            }
+
+            await _dbContext.AdoptionApplications.AddAsync(new AdoptionApplication()
+            {
+                PetAdopterId = petAdopterId,
+                PetId = petId,
+                ShelterId = petShelter.ShelterId,
+                ApplicationDate = DateTime.Now,
+                Status = 1,
+            });
+            await _dbContext.SaveChangesAsync();
+
+            return 1;
+        }
 
         public async Task<List<PetAdopter>> GetAllAdopters()
         {

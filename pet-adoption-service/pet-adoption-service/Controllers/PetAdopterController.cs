@@ -45,7 +45,7 @@ namespace pet_adoption_service.Controllers
             var adopters = await _petAdopterService.GetAllAdopters();
             return Ok(adopters);
         }
-        
+
         [HttpGet("{petAdopterId}")]
         [ProducesResponseType(typeof(List<Pet>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<List<Pet>>> GetPetsOfAdopter(int petAdopterId)
@@ -54,5 +54,48 @@ namespace pet_adoption_service.Controllers
             return Ok(returnList);
         }
 
+        [HttpPost]
+        [ProducesResponseType(typeof(bool), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(string), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(string), (int)HttpStatusCode.Conflict)]
+
+        public async Task<ActionResult<bool>> ApplyForPet(ApplicationDTO applicationDTO)
+        {
+            var petAdopterId = applicationDTO.petAdopterId;
+            var petId = applicationDTO.petId;
+
+            var applicationResult = await _petAdopterService.ApplyForPetAsync(petAdopterId, petId);
+
+            if (applicationResult == 1)
+            {
+                return Ok(true);
+            }
+            else if (applicationResult == -1)
+            {
+                return Conflict("Pet is not available!");
+            }
+            else if (applicationResult == -2)
+            {
+                return Conflict("You already applied for this pet!");
+            }
+            else
+            {
+                return BadRequest();
+            }
+
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<List<AdoptionApplication>?>> GetNewWaitingApplications()
+        {
+            return await _dbContext.AdoptionApplications.Include(q => q.Pet).Include(q => q.PetAdopter).Include(q => q.Shelter).
+                Where(q => q.Status == 1).ToListAsync();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<AdoptionApplication?>> GetAdoptionApplicationById(int id)
+        {
+            return await _dbContext.AdoptionApplications.Include(q => q.Pet).Include(q => q.PetAdopter).SingleOrDefaultAsync(q => q.AdoptionApplicationId == id);
+        }
     }
 }
