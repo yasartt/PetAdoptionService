@@ -49,14 +49,13 @@ namespace pet_adoption_service.Services
         [ProducesResponseType(typeof(NoContentResult), (int)HttpStatusCode.NoContent)]
         public async Task<Shelter> AddShelterAsync(Shelter shelter)
         {
-            string sqlCommand = "INSERT INTO shelter (name, address, username, password, restricted_hours) VALUES (@Name, @Address, @Username, @Password, @RestrictedHours)";
+            string sqlCommand = "INSERT INTO shelter (name, address, username, password) VALUES (@Name, @Address, @Username, @Password)";
 
             await _dbContext.Database.ExecuteSqlRawAsync(sqlCommand,
                 new SqlParameter("@Name", shelter.Name),
                 new SqlParameter("@Address", shelter.Address),
                 new SqlParameter("@Username", shelter.Username),
-                new SqlParameter("@Password", shelter.Password),
-                new SqlParameter("@RestrictedHours", shelter.RestrictedHours)
+                new SqlParameter("@Password", shelter.Password)
             );
 
             return shelter;
