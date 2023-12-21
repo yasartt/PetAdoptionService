@@ -59,31 +59,33 @@ namespace pet_adoption_service.Services
 
         }
 
-        public async Task<Boolean> AddAppointmentAsync(int vetId, int petId, DateTime date)
+        public async Task<Boolean> AddAppointmentAsync(int shelterId, int petAdopterId, DateTime date)
         {
-            // Check if the veterinarian exists
-            var vetExistsCommand = "SELECT COUNT(1) FROM veterinarian WHERE user_id = @VetId";
-            var vetExists = await _dbContext.Database.ExecuteSqlRawAsync(vetExistsCommand, new SqlParameter("@VetId", vetId)) > 0;
+            // Check if the shelter exists
+            var shelterExistsCommand = "SELECT COUNT(1) FROM shelter WHERE user_id = @ShelterId";
+            var shelterExists = await _dbContext.Database.ExecuteSqlRawAsync(shelterExistsCommand, new SqlParameter("@ShelterId", shelterId)) > 0;
 
-            // Check if the pet exists
-            var petExistsCommand = "SELECT COUNT(1) FROM pet WHERE pet_id = @PetId";
-            var petExists = await _dbContext.Database.ExecuteSqlRawAsync(petExistsCommand, new SqlParameter("@PetId", petId)) > 0;
+            // Check if the pet adopter exists
+            var adopterExistsCommand = "SELECT COUNT(1) FROM pet_adopter WHERE user_id = @PetAdopterId";
+            var adopterExists = await _dbContext.Database.ExecuteSqlRawAsync(adopterExistsCommand, new SqlParameter("@PetAdopterId", petAdopterId)) > 0;
 
-            if (!vetExists || !petExists)
+            if (!shelterExists || !adopterExists)
             {
                 return false;
             }
 
             // Insert the new appointment
-            string insertCommand = "INSERT INTO vet_appointments (vet_id, pet_id, appointment_date) VALUES (@VetId, @PetId, @Date)";
+            string insertCommand = "INSERT INTO shelter_appointments (shelter_id, pet_adopter_id, appointment_date) VALUES (@ShelterId, @PetAdopterId, @Date)";
             await _dbContext.Database.ExecuteSqlRawAsync(insertCommand,
-                new SqlParameter("@VetId", vetId),
-                new SqlParameter("@PetId", petId),
+                new SqlParameter("@ShelterId", shelterId),
+                new SqlParameter("@PetAdopterId", petAdopterId),
                 new SqlParameter("@Date", date)
             );
 
             return true;
         }
+
+
 
 
         public async Task<List<Pet>> GetAllPetsOfSheltersAsync(int shelterId)
