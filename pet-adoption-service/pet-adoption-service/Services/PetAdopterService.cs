@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Data.SqlClient;
+using System.Configuration
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using pet_adoption_service.Models;
+
 
 namespace pet_adoption_service.Services
 {
@@ -83,6 +86,56 @@ namespace pet_adoption_service.Services
             return pets.Count > 0 ? pets : null;
         }
 
+        public async Task<(int MostPopularShelterId, int MostPopularVetId)> GetMostPopularIdsAsync()
+        {
+            string connectionString = _dbContext.Database.GetDbConnection().ConnectionString;
+            int mostPopularShelterId = -1;
+            int mostPopularVetId = -1;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+
+                // Query for the most popular shelter
+                string mostPopularShelterQuery = @"
+                                            SELECT TOP 1 shelter_id, COUNT(*) as AppointmentCount
+                                            FROM shelter_appointments
+                                            GROUP BY shelter_id
+                                            ORDER BY AppointmentCount DESC";
+
+                using (SqlCommand command = new SqlCommand(mostPopularShelterQuery, connection))
+                {
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            mostPopularShelterId = reader.GetInt32(0); // shelter_id is the first column
+                        }
+                    }
+                }
+
+                // Query for the most popular vet
+                string mostPopularVetQuery = @"
+                                            SELECT TOP 1 vet_id, COUNT(*) as AppointmentCount
+                                            FROM vet_appointments
+                                            GROUP BY vet_id
+                                            ORDER BY AppointmentCount DESC";
+
+                using (SqlCommand command = new SqlCommand(mostPopularVetQuery, connection))
+                {
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            mostPopularVetId = reader.GetInt32(0); // vet_id is the first column
+                        }
+                    }
+                }
+            }
+
+            return (mostPopularShelterId, mostPopularVetId);
+        }
 
     }
+
 }
