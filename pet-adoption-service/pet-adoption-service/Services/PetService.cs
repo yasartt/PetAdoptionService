@@ -29,7 +29,7 @@ namespace pet_adoption_service.Services
         }
 
 
-        public async Task<bool> AddPet(Pet pet)
+        public async Task<bool> AddPet(Pet pet, int shelterId)
         {
             try
             {
@@ -48,12 +48,27 @@ namespace pet_adoption_service.Services
 
                 await _dbContext.Database.ExecuteSqlRawAsync(sqlCommand, parameters.ToArray());
 
-                return true;
             }
             catch (Exception ex)
             {
                 return false;
             }
+
+            var theAddedPet = await _dbContext.Pets.SingleOrDefaultAsync(q=> q.photo_id == pet.photo_id);
+
+            var newStay = new Stay()
+            {
+                PetId = theAddedPet.PetId,
+                ShelterId = shelterId,
+                start_date = DateTime.Now,
+                end_date = null,
+                is_Current = true,
+            };
+
+            await _dbContext.AddAsync(newStay);
+            await _dbContext.SaveChangesAsync();
+
+            return true;
         }
 
 

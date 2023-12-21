@@ -100,5 +100,10 @@ namespace pet_adoption_service.Services
             return resultShelter;
         }
 
+        public async Task<List<ShelterAppointment>?> GetAppointmentsByShelterIdAsync(int shelterId)
+        {
+            return await _dbContext.ShelterAppointments.Where(q => q.ShelterId == shelterId).ToListAsync();
+        }
+
     }
 }

@@ -17,17 +17,6 @@ namespace pet_adoption_service.Controllers
         }
 
         [HttpGet("{shelterId}")]
-        public async Task<ActionResult<List<Pet>>> GetPetsByShelter(int shelterId)
-        {
-            if(shelterId == null)
-            {
-                return BadRequest();
-            }
-
-            return await shelterService.GetPetsByShelterAsync(shelterId);
-        }
-
-        [HttpGet("{shelterId}")]
         public async Task<ActionResult<ShelterBusyHoursView>> GetShelterBusyHours(int shelterId)
         {
             return await shelterService.GetShelterBusyHoursAsync(shelterId);
@@ -49,7 +38,7 @@ namespace pet_adoption_service.Controllers
             return await shelterService.GetAllPetsOfSheltersAsync(shelterId);
         }
 
-        [HttpGet("shelterId")]
+        [HttpGet("{shelterId}")]
         [ProducesResponseType(typeof(Shelter), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<Shelter>> GetShelterById(int shelterId)
         {
@@ -59,6 +48,15 @@ namespace pet_adoption_service.Controllers
             return Ok(theShelter);
         }
 
+        [HttpGet("{shelterId}")]
+        [ProducesResponseType(typeof(Shelter), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<List<Shelter>>> GetAppointmentsByShelterId(int shelterId)
+        {
+
+            var theShelter = await shelterService.GetAppointmentsByShelterIdAsync(shelterId);
+
+            return Ok(theShelter);
+        }
 
     }
 }

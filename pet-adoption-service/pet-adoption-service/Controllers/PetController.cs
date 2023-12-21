@@ -28,14 +28,25 @@ namespace pet_adoption_service.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> AddPet([FromBody] Pet pet)
+        public async Task<ActionResult> AddPet([FromBody] AddPetDTO newPet)
         {
+            var pet = new Pet()
+            {
+                Breed = newPet.Breed,
+                Age = newPet.Age,
+                IsAvailable = newPet.IsAvailable,
+                Gender = newPet.Gender,
+                photo_id = newPet.photo_id,
+                Name = newPet.Name,
+                Status = newPet.Status,
+            };
+
             if (pet == null)
             {
                 return BadRequest("Pet data is null");
             }
 
-            await _petService.AddPet(pet);
+            await _petService.AddPet(pet, newPet.shelterId);
 
             return CreatedAtAction(nameof(GetAllPets), new { id = pet.PetId }, pet);
         }
