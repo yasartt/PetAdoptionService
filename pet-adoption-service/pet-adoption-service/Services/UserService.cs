@@ -46,7 +46,6 @@ namespace pet_adoption_service.Services
             return adopter;
         }
 
-        [ProducesResponseType(typeof(NoContentResult), (int)HttpStatusCode.NoContent)]
         public async Task<Shelter> AddShelterAsync(Shelter shelter)
         {
             string sqlCommand = "INSERT INTO shelter (name, address, username, password) VALUES (@Name, @Address, @Username, @Password)";
@@ -59,7 +58,7 @@ namespace pet_adoption_service.Services
             );
 
             return shelter;
-        }
+        }
 
         public async Task<SessionView> LoginUserAsync(string userType, string userName, string password)
         {
