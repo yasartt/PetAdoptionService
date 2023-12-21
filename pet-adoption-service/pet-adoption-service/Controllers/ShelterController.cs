@@ -34,9 +34,12 @@ namespace pet_adoption_service.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Boolean>> AddAppointment(int vetId, int petAdopterId, DateTime date)
+        public async Task<ActionResult<Boolean>> AddAppointment(AddAppointmentDTO addAppointmentDTO)
         {
-            return await shelterService.AddAppointmentAsync(vetId, petAdopterId, date);
+            var shelterId = addAppointmentDTO.shelterId;
+            var petAdopterId = addAppointmentDTO.petAdopterId;
+            var date = addAppointmentDTO.date;
+            return await shelterService.AddAppointmentAsync(shelterId, petAdopterId, date);
         }
 
         [HttpGet("{shelterId}")]

@@ -97,5 +97,65 @@ namespace pet_adoption_service.Controllers
         {
             return await _dbContext.AdoptionApplications.Include(q => q.Pet).Include(q => q.PetAdopter).SingleOrDefaultAsync(q => q.AdoptionApplicationId == id);
         }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<AdoptionApplication?>> ApproveApplication(int id)
+        {
+            var theApplication = await _dbContext.AdoptionApplications.SingleOrDefaultAsync(q => q.AdoptionApplicationId == id);
+
+            if (theApplication == null)
+            {
+                return NotFound();
+            }
+            else if(theApplication.Status != 1)
+            {
+                return BadRequest();
+            }
+            else
+            {
+                theApplication.Status = 2;
+
+                await _dbContext.SaveChangesAsync();
+
+                return Ok(theApplication);
+            }
+
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<AdoptionApplication?>> DeclineApplication(int id)
+        {
+            var theApplication = await _dbContext.AdoptionApplications.SingleOrDefaultAsync(q => q.AdoptionApplicationId == id);
+
+            if (theApplication == null)
+            {
+                return NotFound();
+            }
+            else if (theApplication.Status != 1)
+            {
+                return BadRequest();
+            }
+            else
+            {
+                theApplication.Status = 0;
+
+                await _dbContext.SaveChangesAsync();
+
+                return Ok(theApplication);
+            }
+
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<List<AdoptionApplication>?>> GetApplicationsByAdopterId(int id)
+        {
+            return await _dbContext.AdoptionApplications.Include(q => q.Pet).Where(q => q.PetAdopterId == id && q.Status == 1).ToListAsync();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<List<AdoptionApplication>?>> GetDeclinesByAdopterId(int id)
+        {
+            return await _dbContext.AdoptionApplications.Include(q => q.Pet).Where(q => q.PetAdopterId == id && q.Status == 0).ToListAsync();
+        }
     }
 }
