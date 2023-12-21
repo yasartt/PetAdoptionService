@@ -1,10 +1,12 @@
 ﻿using System.Data.SqlClient;
-using System.Configuration
+using System.Configuration;
+
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using pet_adoption_service.Models;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 
 namespace pet_adoption_service.Services
@@ -86,7 +88,7 @@ namespace pet_adoption_service.Services
             return pets.Count > 0 ? pets : null;
         }
 
-        public async Task<(int MostPopularShelterId, int MostPopularVetId)> GetMostPopularIdsAsync()
+        public async Task<(int MostPopularShelterId, int MostPopularVetId)> Statistics()
         {
             string connectionString = _dbContext.Database.GetDbConnection().ConnectionString;
             int mostPopularShelterId = -1;
@@ -98,18 +100,18 @@ namespace pet_adoption_service.Services
 
                 // Query for the most popular shelter
                 string mostPopularShelterQuery = @"
-                                            SELECT TOP 1 shelter_id, COUNT(*) as AppointmentCount
-                                            FROM shelter_appointments
-                                            GROUP BY shelter_id
-                                            ORDER BY AppointmentCount DESC";
+                                                SELECT TOP 1 shelter_id, COUNT(*) as AppointmentCount
+                                                FROM shelter_appointments
+                                                GROUP BY shelter_id
+                                                ORDER BY AppointmentCount DESC";
 
-                using (SqlCommand command = new SqlCommand(mostPopularShelterQuery, connection))
+                using (SqlCommand shelterCommand = new SqlCommand(mostPopularShelterQuery, connection))
                 {
-                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    using (SqlDataReader reader = await shelterCommand.ExecuteReaderAsync())
                     {
                         if (await reader.ReadAsync())
                         {
-                            mostPopularShelterId = reader.GetInt32(0); // shelter_id is the first column
+                            mostPopularShelterId = reader.GetInt32(0); // Assumes shelter_id is the first column
                         }
                     }
                 }
@@ -121,13 +123,13 @@ namespace pet_adoption_service.Services
                                             GROUP BY vet_id
                                             ORDER BY AppointmentCount DESC";
 
-                using (SqlCommand command = new SqlCommand(mostPopularVetQuery, connection))
+                using (SqlCommand vetCommand = new SqlCommand(mostPopularVetQuery, connection))
                 {
-                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    using (SqlDataReader reader = await vetCommand.ExecuteReaderAsync())
                     {
                         if (await reader.ReadAsync())
                         {
-                            mostPopularVetId = reader.GetInt32(0); // vet_id is the first column
+                            mostPopularVetId = reader.GetInt32(0); // Assumes vet_id is the first column
                         }
                     }
                 }
