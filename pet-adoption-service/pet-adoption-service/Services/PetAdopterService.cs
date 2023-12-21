@@ -138,6 +138,50 @@ namespace pet_adoption_service.Services
             return (mostPopularShelterId, mostPopularVetId);
         }
 
+        /*
+        public async Task<(int MostPopularShelterId, int MostPopularVetId)> GetMostPopularIdsAsync()
+        {
+            int mostPopularShelterId = -1;
+            int mostPopularVetId = -1;
+
+            // Query for the most popular shelter
+            var mostPopularShelterQuery = @"
+                                    SELECT TOP 1 shelter_id, COUNT(*) as AppointmentCount
+                                    FROM shelter_appointments
+                                    GROUP BY shelter_id
+                                    ORDER BY AppointmentCount DESC";
+
+            // Query for the most popular vet
+            var mostPopularVetQuery = @"
+                                    SELECT TOP 1 vet_id, COUNT(*) as AppointmentCount
+                                    FROM vet_appointments
+                                    GROUP BY vet_id
+                                    ORDER BY AppointmentCount DESC";
+
+            // Execute the query for the most popular shelter
+            var shelterResult = await _dbContext.ShelterAppointments
+                .FromSqlRaw(mostPopularShelterQuery)
+                .Select(a => new { a.ShelterId })
+                .FirstOrDefaultAsync();
+            if (shelterResult != null)
+            {
+                mostPopularShelterId = shelterResult.ShelterId;
+            }
+
+            // Execute the query for the most popular vet
+            var vetResult = await _dbContext.VetAppointments
+                .FromSqlRaw(mostPopularVetQuery)
+                .Select(a => new { a.VetId })
+                .FirstOrDefaultAsync();
+            if (vetResult != null)
+            {
+                mostPopularVetId = vetResult.VetId;
+            }
+
+            return (mostPopularShelterId, mostPopularVetId);
+        }
+
+        */
     }
 
 }
