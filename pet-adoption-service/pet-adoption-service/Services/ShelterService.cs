@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using pet_adoption_service.Models;
 using System.Net;
@@ -16,22 +17,33 @@ namespace pet_adoption_service.Services
 
         }
 
+        // Use GetAllPetsOfSheltersAsync instead GetPetsByShelterAsync
         [ProducesResponseType(typeof(NoContentResult), (int)HttpStatusCode.NoContent)]
         public async Task<List<Pet>> GetPetsByShelterAsync(int shelterId)
         {
-            //var petList = await _dbContext.Pets.Where(q => q.ShelterId == shelterId).ToListAsync();
-            
+            string sqlCommand = "SELECT pet.* FROM pet JOIN stay ON pet.pet_id = stay.pet_id WHERE stay.shelter_id = @ShelterId AND stay.is_Current = 1";
 
-            return null;
+            var pets = await _dbContext.Pets
+                        .FromSqlRaw(sqlCommand, new SqlParameter("@ShelterId", shelterId))
+                        .ToListAsync();
+
+            return pets.Count > 0 ? pets : null;
         }
+
 
         public async Task<ShelterBusyHoursView> GetShelterBusyHoursAsync(int shelterId)
         {
             try
             {
-                var theShelter = await _dbContext.Shelters.SingleOrDefaultAsync(q => q.UserId == shelterId);
+                var theShelter = await _dbContext.Shelters
+                                    .FromSqlRaw("SELECT * FROM shelter WHERE user_id = @ShelterId", new SqlParameter("@ShelterId", shelterId))
+                                    .SingleOrDefaultAsync();
 
-                var appointmentList = await _dbContext.ShelterAppointments.Where(q => q.ShelterId == shelterId).ToListAsync();
+
+                var appointmentList = await _dbContext.ShelterAppointments
+                                    .FromSqlRaw("SELECT * FROM shelter_appointments WHERE shelter_id = @ShelterId", new SqlParameter("@ShelterId", shelterId))
+                                    .ToListAsync();
+
 
                 return new ShelterBusyHoursView()
                 {
@@ -49,47 +61,49 @@ namespace pet_adoption_service.Services
 
         public async Task<Boolean> AddAppointmentAsync(int vetId, int petId, DateTime date)
         {
-            var theVet = await _dbContext.Veterinarians.SingleOrDefaultAsync(q => q.UserId == vetId);
+            // Check if the veterinarian exists
+            var vetExistsCommand = "SELECT COUNT(1) FROM veterinarian WHERE user_id = @VetId";
+            var vetExists = await _dbContext.Database.ExecuteSqlRawAsync(vetExistsCommand, new SqlParameter("@VetId", vetId)) > 0;
 
-            var thePet = await _dbContext.Pets.SingleOrDefaultAsync(q => q.PetId == petId);
+            // Check if the pet exists
+            var petExistsCommand = "SELECT COUNT(1) FROM pet WHERE pet_id = @PetId";
+            var petExists = await _dbContext.Database.ExecuteSqlRawAsync(petExistsCommand, new SqlParameter("@PetId", petId)) > 0;
 
-            if (theVet == null || thePet == null)
+            if (!vetExists || !petExists)
             {
                 return false;
             }
 
-            // check if that hour is available
-
-            await _dbContext.VetAppointments.AddAsync(new VetAppointment()
-            {
-                VetId = vetId,
-                PetId = petId,
-                AppointmentDate = date,
-            });
-
-            await _dbContext.SaveChangesAsync();
+            // Insert the new appointment
+            string insertCommand = "INSERT INTO vet_appointments (vet_id, pet_id, appointment_date) VALUES (@VetId, @PetId, @Date)";
+            await _dbContext.Database.ExecuteSqlRawAsync(insertCommand,
+                new SqlParameter("@VetId", vetId),
+                new SqlParameter("@PetId", petId),
+                new SqlParameter("@Date", date)
+            );
 
             return true;
         }
 
+
         public async Task<List<Pet>> GetAllPetsOfSheltersAsync(int shelterId)
         {
-            var petList = await _dbContext.Stays.Where(q => q.ShelterId == shelterId).Include(q => q.Pet).Select(q => q.Pet).ToListAsync();
+            string sqlCommand = "SELECT pet.* FROM pet JOIN stay ON pet.pet_id = stay.pet_id WHERE stay.shelter_id = @ShelterId";
 
-            if (petList.Count > 0)
-            {
-                return petList;
-            }
-            else
-            {
-                return null;
-            }
+            var pets = await _dbContext.Pets
+                        .FromSqlRaw(sqlCommand, new SqlParameter("@ShelterId", shelterId))
+                        .ToListAsync();
 
+            return pets.Count > 0 ? pets : null;
         }
+
 
         public async Task<Shelter> GetShelterByIdAsync(int shelterId)
         {
-            var resultShelter = await _dbContext.Shelters.SingleOrDefaultAsync(q => q.UserId == shelterId);
+            var resultShelter = await _dbContext.Shelters
+                                .FromSqlRaw("SELECT * FROM shelter WHERE user_id = @ShelterId",
+                                            new SqlParameter("@ShelterId", shelterId))
+                                .SingleOrDefaultAsync();
 
             return resultShelter;
         }

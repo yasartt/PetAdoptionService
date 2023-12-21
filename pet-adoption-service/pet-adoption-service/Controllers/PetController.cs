@@ -84,5 +84,18 @@ namespace pet_adoption_service.Controllers
 
             return await _petService.FilterPetsAsync( minAge,  maxAge,  gender, breed);
         }
+
+        [HttpGet("search/{searchTerm}")]
+        public async Task<ActionResult<List<Pet>>> SearchPets(string searchTerm)
+        {
+            var pets = await _petService.SearchPetsAsync(searchTerm);
+            if (pets == null || !pets.Any())
+            {
+                return NotFound("No pets found matching the search term.");
+            }
+
+            return Ok(pets);
+        }
+
     }
 }

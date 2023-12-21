@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using pet_adoption_service.Models;
 using System.Net;
@@ -11,144 +12,106 @@ namespace pet_adoption_service.Services
 
         public UserService(PetAdoptionDbContext dbContext)
         {
-
             _dbContext = dbContext;
-
         }
 
-
-        [ProducesResponseType(typeof(NoContentResult), (int)HttpStatusCode.NoContent)]
         public async Task<Veterinarian> AddVetAsync(Veterinarian vet)
         {
+            string sqlCommand = "INSERT INTO veterinarian (location, name, specialization, username, password) VALUES (@Location, @Name, @Specialization, @Username, @Password)";
 
+            await _dbContext.Database.ExecuteSqlRawAsync(sqlCommand,
+                new SqlParameter("@Location", vet.Location),
+                new SqlParameter("@Name", vet.Name),
+                new SqlParameter("@Specialization", vet.Specialization),
+                new SqlParameter("@Username", vet.Username),
+                new SqlParameter("@Password", vet.Password)
+            );
 
-            var newVeterinarian = new Veterinarian
-            {
-                Location = vet.Location,
-                Name = vet.Name,
-                Specialization = vet.Specialization,
-                Username = vet.Username,
-                Password = vet.Password,
-            };
-
-            await _dbContext.Veterinarians.AddAsync(newVeterinarian);
-            await _dbContext.SaveChangesAsync();
-
-            return newVeterinarian;
+            return vet;
         }
 
         [ProducesResponseType(typeof(NoContentResult), (int)HttpStatusCode.NoContent)]
         public async Task<PetAdopter> AddAdopterAsync(PetAdopter adopter)
         {
+            string sqlCommand = "INSERT INTO pet_adopter (age, name, address, username, password) VALUES (@Age, @Name, @Address, @Username, @Password)";
 
+            await _dbContext.Database.ExecuteSqlRawAsync(sqlCommand,
+                new SqlParameter("@Age", adopter.Age),
+                new SqlParameter("@Name", adopter.Name),
+                new SqlParameter("@Address", adopter.Address),
+                new SqlParameter("@Username", adopter.Username),
+                new SqlParameter("@Password", adopter.Password)
+            );
 
-            var newAdopter = new PetAdopter
-            {
-                Age = adopter.Age,
-                Name = adopter.Name,
-                Address = adopter.Address,
-                Username = adopter.Username,
-                Password = adopter.Password,
-            };
-
-            await _dbContext.PetAdopters.AddAsync(newAdopter);
-            await _dbContext.SaveChangesAsync();
-
-            return newAdopter;
+            return adopter;
         }
 
         [ProducesResponseType(typeof(NoContentResult), (int)HttpStatusCode.NoContent)]
         public async Task<Shelter> AddShelterAsync(Shelter shelter)
         {
+            string sqlCommand = "INSERT INTO shelter (name, address, username, password, restricted_hours) VALUES (@Name, @Address, @Username, @Password, @RestrictedHours)";
 
+            await _dbContext.Database.ExecuteSqlRawAsync(sqlCommand,
+                new SqlParameter("@Name", shelter.Name),
+                new SqlParameter("@Address", shelter.Address),
+                new SqlParameter("@Username", shelter.Username),
+                new SqlParameter("@Password", shelter.Password),
+                new SqlParameter("@RestrictedHours", shelter.RestrictedHours)
+            );
 
-            var newShelter = new Shelter
-            {
-                Name = shelter.Name,
-                Address = shelter.Address,
-                Username = shelter.Username,
-                Password = shelter.Password,
-                RestrictedHours = "",
-            };
-
-            await _dbContext.Shelters.AddAsync(newShelter);
-            await _dbContext.SaveChangesAsync();
-
-            return newShelter;
+            return shelter;
         }
 
         public async Task<SessionView> LoginUserAsync(string userType, string userName, string password)
         {
-            if(userType == "Adopter")
+            string sqlCommand = "";
+            object user = null;
+
+            switch (userType)
             {
-                var usernameVarMi = await _dbContext.PetAdopters.SingleOrDefaultAsync(q => q.Username == userName);
-
-                if (usernameVarMi == null)
-                {
-                    return null;
-                }
-                else if (usernameVarMi.Password != password)
-                {
-                    //return passwordHatali 
-                }
-                else
-                {
-                    return new SessionView()
-                    {
-                        user = usernameVarMi
-                    };
-                }
-                return null;
-            }
-            else if(userType == "Shelter")
-            {
-                var usernameVarMi = await _dbContext.Shelters.SingleOrDefaultAsync(q => q.Username == userName);
-
-                if (usernameVarMi == null)
-                {
-                    return null;
-                }
-                else if (usernameVarMi.Password != password)
-                {
-                    //return passwordHatali 
-                }
-                else
-                {
-                    return new SessionView()
-                    {
-                        user = usernameVarMi
-                    };
-                }
-                return null;
-
-            }
-            else if (userType == "Veterinarian")
-            {
-                var usernameVarMi = await _dbContext.Veterinarians.SingleOrDefaultAsync(q => q.Username == userName);
-
-                if (usernameVarMi == null)
-                {
-                    return null;
-                }
-                else if (usernameVarMi.Password != password)
-                {
-                    //return passwordHatali 
-                }
-                else
-                {
-                    return new SessionView()
-                    {
-                        user = usernameVarMi
-                    };
-                }
-                return null;
-
+                case "Adopter":
+                    sqlCommand = "SELECT * FROM pet_adopter WHERE username = @Username AND password = @Password";
+                    user = await _dbContext.PetAdopters.FromSqlRaw(sqlCommand,
+                            new SqlParameter("@Username", userName),
+                            new SqlParameter("@Password", password))
+                            .SingleOrDefaultAsync();
+                    break;
+                case "Shelter":
+                    sqlCommand = "SELECT * FROM shelter WHERE username = @Username AND password = @Password";
+                    user = await _dbContext.Shelters.FromSqlRaw(sqlCommand,
+                            new SqlParameter("@Username", userName),
+                            new SqlParameter("@Password", password))
+                            .SingleOrDefaultAsync();
+                    break;
+                case "Veterinarian":
+                    sqlCommand = "SELECT * FROM veterinarian WHERE username = @Username AND password = @Password";
+                    user = await _dbContext.Veterinarians.FromSqlRaw(sqlCommand,
+                            new SqlParameter("@Username", userName),
+                            new SqlParameter("@Password", password))
+                            .SingleOrDefaultAsync();
+                    break;
+                case "Admin":
+                    sqlCommand = "SELECT * FROM admin WHERE username = @Username AND password = @Password";
+                    user = await _dbContext.Admin.FromSqlRaw(sqlCommand,
+                            new SqlParameter("@Username", userName),
+                            new SqlParameter("@Password", password))
+                            .SingleOrDefaultAsync();
+                    break;
             }
 
-            return null;
-
-            // admin unuttuk
+            if (user == null)
+            {
+                return null;
+            }
+            else
+            {
+                return new SessionView()
+                {
+                    user = user
+                };
+            }
         }
+
     }
 }
 

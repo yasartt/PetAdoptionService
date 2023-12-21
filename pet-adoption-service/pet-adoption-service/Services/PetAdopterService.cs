@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using pet_adoption_service.Models;
 
@@ -16,30 +17,40 @@ namespace pet_adoption_service.Services
 
         public async Task<PetAdopter> AddAdopter(PetAdopter newAdopter)
         {
-            _dbContext.PetAdopters.Add(newAdopter);
-            await _dbContext.SaveChangesAsync();
+            string sqlCommand = "INSERT INTO pet_adopter (username, password, name, address, age) VALUES (@Username, @Password, @Name, @Address, @Age)";
+
+            await _dbContext.Database.ExecuteSqlRawAsync(sqlCommand,
+                new SqlParameter("@Username", newAdopter.Username),
+                new SqlParameter("@Password", newAdopter.Password),
+                new SqlParameter("@Name", newAdopter.Name),
+                new SqlParameter("@Address", newAdopter.Address),
+                new SqlParameter("@Age", newAdopter.Age)
+            );
+
             return newAdopter;
         }
 
+
         public async Task<List<PetAdopter>> GetAllAdopters()
         {
-            return await _dbContext.PetAdopters.ToListAsync();
+            var adopters = await _dbContext.PetAdopters
+                              .FromSqlRaw("SELECT * FROM pet_adopter")
+                              .ToListAsync();
+            return adopters;
         }
 
-        public async Task <List<Pet>> GetAllPetsOfAdoptersAsync(int petAdopterId)
+
+        public async Task<List<Pet>> GetAllPetsOfAdoptersAsync(int petAdopterId)
         {
-            var petList = await _dbContext.Adopts.Where(q => q.PetAdopterId == petAdopterId).Include(q => q.Pet).Select(q => q.Pet).ToListAsync();
-            
-            if(petList.Count > 0)
-            {
-                return petList;
-            }
-            else
-            {
-                return null;
-            }
+            string sqlCommand = "SELECT pet.* FROM pet JOIN adopt ON pet.pet_id = adopt.pet_id WHERE adopt.user_id = @PetAdopterId";
 
+            var pets = await _dbContext.Pets
+                        .FromSqlRaw(sqlCommand, new SqlParameter("@PetAdopterId", petAdopterId))
+                        .ToListAsync();
+
+            return pets.Count > 0 ? pets : null;
         }
-        
+
+
     }
 }

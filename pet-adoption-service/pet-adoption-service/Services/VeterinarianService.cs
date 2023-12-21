@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using pet_adoption_service.Models;
 using System.Net;
@@ -18,48 +19,69 @@ namespace pet_adoption_service.Services
         {
             try
             {
-                var theVet = await _dbContext.Veterinarians.SingleOrDefaultAsync(q => q.UserId == vetId);
+                string vetSql = "SELECT * FROM veterinarian WHERE user_id = @UserId";
+                var theVet = await _dbContext.Veterinarians
+                              .FromSqlRaw(vetSql, new SqlParameter("@UserId", vetId))
+                              .SingleOrDefaultAsync();
 
-                var appointmentList = await _dbContext.VetAppointments.Where(q => q.VetId == vetId).ToListAsync();
+                string appointmentSql = "SELECT * FROM vet_appointments WHERE vet_id = @UserId";
+                var appointmentList = await _dbContext.VetAppointments
+                                      .FromSqlRaw(appointmentSql, new SqlParameter("@UserId", vetId))
+                                      .ToListAsync();
 
                 return new VetBusyHoursView()
                 {
                     Appointments = appointmentList,
                     RestrictedHours = theVet.RestrictedHours,
                 };
-
             }
             catch (Exception ex)
             {
                 return null;
             }
-            
         }
+
 
         public async Task<Boolean> AddAppointmentAsync(int vetId, int petId, DateTime date)
         {
-            var theVet = await _dbContext.Veterinarians.SingleOrDefaultAsync(q => q.UserId == vetId);
+            string vetSql = "SELECT * FROM veterinarian WHERE user_id = @UserId";
+            var theVet = await _dbContext.Veterinarians
+                          .FromSqlRaw(vetSql, new SqlParameter("@UserId", vetId))
+                          .SingleOrDefaultAsync();
 
-            var thePet = await _dbContext.Pets.SingleOrDefaultAsync(q => q.PetId == petId);
+            string petSql = "SELECT * FROM pet WHERE pet_id = @PetId";
+            var thePet = await _dbContext.Pets
+                          .FromSqlRaw(petSql, new SqlParameter("@PetId", petId))
+                          .SingleOrDefaultAsync();
 
             if (theVet == null || thePet == null)
             {
                 return false;
             }
 
-            // check if that hour is available
-            // ...
+            // Check if that hour is available
+            string checkAvailabilitySql = "SELECT COUNT(1) FROM vet_appointments WHERE vet_id = @UserId AND appointment_date = @Date";
+            var count = await _dbContext.Database.ExecuteSqlRawAsync(checkAvailabilitySql,
+                new SqlParameter("@UserId", vetId),
+                new SqlParameter("@Date", date)
+            );
 
-            await _dbContext.VetAppointments.AddAsync(new VetAppointment()
+            if (count > 0)
             {
-                VetId = vetId,
-                PetId = petId,
-                AppointmentDate = date,
-            });
+                // If count is greater than 0, it means there's already an appointment at that time
+                return false;
+            }
 
-            await _dbContext.SaveChangesAsync();
+            // Hour is available, insert the new appointment
+            string insertAppointmentSql = "INSERT INTO vet_appointments (vet_id, pet_id, appointment_date) VALUES (@UserId, @PetId, @Date)";
+            await _dbContext.Database.ExecuteSqlRawAsync(insertAppointmentSql,
+                new SqlParameter("@UserId", vetId),
+                new SqlParameter("@PetId", petId),
+                new SqlParameter("@Date", date)
+            );
 
             return true;
         }
+
     }
 }

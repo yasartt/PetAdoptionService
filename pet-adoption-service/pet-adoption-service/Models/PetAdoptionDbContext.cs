@@ -25,6 +25,7 @@ namespace pet_adoption_service.Models
         public DbSet<Adopt> Adopts { get; set; }
         public DbSet<Stay> Stays { get; set; }
         public DbSet<ExpertAdvice> ExpertAdvices { get; set;}
+        public DbSet<Admin> Admin { get; set; }
 
     }
 }
