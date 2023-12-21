@@ -61,26 +61,16 @@ namespace pet_adoption_service.Services
 
         public async Task<Boolean> AddAppointmentAsync(int shelterId, int petAdopterId, DateTime date)
         {
-            // Check if the shelter exists
-            var shelterExistsCommand = "SELECT COUNT(1) FROM shelter WHERE user_id = @ShelterId";
-            var shelterExists = await _dbContext.Database.ExecuteSqlRawAsync(shelterExistsCommand, new SqlParameter("@ShelterId", shelterId)) > 0;
-
-            // Check if the pet adopter exists
-            var adopterExistsCommand = "SELECT COUNT(1) FROM pet_adopter WHERE user_id = @PetAdopterId";
-            var adopterExists = await _dbContext.Database.ExecuteSqlRawAsync(adopterExistsCommand, new SqlParameter("@PetAdopterId", petAdopterId)) > 0;
-
-            if (!shelterExists || !adopterExists)
+            var appointmentToAdd = new ShelterAppointment()
             {
-                return false;
-            }
+                ShelterId = shelterId,
+                PetAdopterId = petAdopterId,
+                AppointmentDate = date
+            };
 
-            // Insert the new appointment
-            string insertCommand = "INSERT INTO shelter_appointments (shelter_id, pet_adopter_id, appointment_date) VALUES (@ShelterId, @PetAdopterId, @Date)";
-            await _dbContext.Database.ExecuteSqlRawAsync(insertCommand,
-                new SqlParameter("@ShelterId", shelterId),
-                new SqlParameter("@PetAdopterId", petAdopterId),
-                new SqlParameter("@Date", date)
-            );
+            var result = await _dbContext.AddAsync(appointmentToAdd);
+
+            await _dbContext.SaveChangesAsync();
 
             return true;
         }
