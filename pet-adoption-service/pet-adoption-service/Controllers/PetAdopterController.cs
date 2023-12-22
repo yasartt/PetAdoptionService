@@ -157,5 +157,11 @@ namespace pet_adoption_service.Controllers
         {
             return await _dbContext.AdoptionApplications.Include(q => q.Pet).Where(q => q.PetAdopterId == id && q.Status == 0).ToListAsync();
         }
+
+        [HttpGet]
+        public async Task<ActionResult<StatisticsView>> GetStatisticsView()
+        {
+            return await _petAdopterService.GetMostPopularIdsAsync();
+        }
     }
 }

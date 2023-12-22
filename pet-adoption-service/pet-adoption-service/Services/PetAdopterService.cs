@@ -138,11 +138,10 @@ namespace pet_adoption_service.Services
             return (mostPopularShelterId, mostPopularVetId);
         }
 
-        /*
-        public async Task<(int MostPopularShelterId, int MostPopularVetId)> GetMostPopularIdsAsync()
+        public async Task<StatisticsView> GetMostPopularIdsAsync()
         {
-            int mostPopularShelterId = -1;
-            int mostPopularVetId = -1;
+            int? mostPopularShelterId = -1;
+            int? mostPopularVetId = -1;
 
             // Query for the most popular shelter
             var mostPopularShelterQuery = @"
@@ -178,10 +177,13 @@ namespace pet_adoption_service.Services
                 mostPopularVetId = vetResult.VetId;
             }
 
-            return (mostPopularShelterId, mostPopularVetId);
+            var statisticsResult = new StatisticsView()
+            {
+                mostPopularShelter = mostPopularShelterId,
+                mostPopularVet = mostPopularVetId,
+            };
+
+            return statisticsResult;
         }
-
-        */
     }
-
 }

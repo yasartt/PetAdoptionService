@@ -2,6 +2,8 @@
 {
     public class StatisticsView
     {
-        //public int numberOfPets {get;set;}
+        public int? mostPopularVet {get;set;}
+        public int? mostPopularShelter { get; set; }
+
     }
 }
